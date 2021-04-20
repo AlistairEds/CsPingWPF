@@ -113,13 +113,13 @@ namespace CsPingWPF.ViewModels {
 			//System.Threading.ThreadPool.SetMaxThreads (500, 500);
 
 			for ( int i = int.Parse (config.IpTextBoxC); i <= int.Parse (config.IpTextBoxD); i++ ) {
-				for ( int j = 1; j < 255; j++ ) {
+				for ( int j = 1; j <= 255; j++ ) {
 					string ip = config.IpTextBoxA + "." + config.IpTextBoxB + "." + i + "." + j;
 					System.Threading.ThreadPool.QueueUserWorkItem (new System.Threading.WaitCallback (pingCore.PingEachIP),
 				ip);
 				}
 			}
-			int totalCount = ( int.Parse (config.IpTextBoxD) - int.Parse (config.IpTextBoxC) + 1 ) * 254 * 50;
+			int totalCount = ( int.Parse (config.IpTextBoxD) - int.Parse (config.IpTextBoxC) + 1 ) * 255 * int.Parse(config.PingTimesText);
 			progress.SetParameter (pingCore, totalCount);
 			//新建一个线程处理progressbar
 			new System.Threading.Thread (new System.Threading.ThreadStart (progress.UpdateProgressBarThread)).Start ();

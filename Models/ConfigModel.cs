@@ -144,7 +144,7 @@ namespace CsPingWPF.Models {
 			}
 		}
 
-		private string _minThreadText = "254";
+		private string _minThreadText = "255";
 
 		public string MinThreadText {
 			get {
