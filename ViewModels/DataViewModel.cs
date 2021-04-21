@@ -29,23 +29,28 @@ namespace CsPingWPF.ViewModels {
 		//构造函数 初始化，新的程序入口
 		public DataViewModel () {
 			pingDatas = new ObservableCollection<DataModel> ();
-			BeginButton = new DelegateCommand {
-				ExecuteCommand = new Action<object> (BeginButtonCommand),
-				CanExecuteCommand = new Func<object, bool> (CanBeginButton)
-			};
-			AbortButton = new DelegateCommand {
-				ExecuteCommand = new Action<object> (AbortButtonCommand)
-			};
 			Progress = new ProgressModel ();
 			Config = new ConfigModel ();
 			iniModel = new IniModel ();
+			BeginButton = new DelegateCommand {
+				ExecuteCommand = new Action<object> (BeginButtonCommand),
+				CanExecuteCommand = new Func<object, bool> (CanBeginButton),
+				ProgressOfCommand = Progress
+			};
+			AbortButton = new DelegateCommand {
+				ExecuteCommand = new Action<object> (AbortButtonCommand),
+				CanExecuteCommand = new Func<object, bool> (CanAbortButton)
+				//由于两个按钮借助一个Progress做判断即可，AbortButton也使用BeginButton的Progress
+				//ProgressOfCommand = Progress
+			};
+			
 			//读入配置文件
 			iniModel.SetFilePath (AppDomain.CurrentDomain.BaseDirectory + "config.ini");
 			ReadIniFile (iniModel, Config);
 		}
 		//开始按钮
 		bool CanBeginButton ( object parameter ) {
-			return Config.isConfigRight;
+			return Config.isConfigRight && !BeginButton.ProgressOfCommand.Progressing;
 		}
 		void BeginButtonCommand ( object obj ) {
 			//清空datagrid
@@ -58,15 +63,30 @@ namespace CsPingWPF.ViewModels {
 			WriteIniFile (iniModel, Config);
 			//开启线程池
 			StartTheard (Config, Progress, pingCore);
-
+			//更新开始按钮的可执行状态，变为不可按
+			BeginButton.ProgressOfCommand.Progressing = true;
+			BeginButton.RaiseCanExecuteChanged ();
+			//更新终止按钮状态
+			AbortButton.RaiseCanExecuteChanged ();
 
 		}
 		//终止按钮
-		void AbortButtonCommand ( object obj ) {
-			if ( pingCore != null ) {
-				pingCore.AbortAll ();
-				Progress.ProgressValue = 100;
+		bool CanAbortButton ( object parameter ) {
+			if ( pingCore != null && BeginButton.ProgressOfCommand.Progressing == true ) {
+				return true;
+			} else {
+				return false;
 			}
+		}
+
+		void AbortButtonCommand ( object obj ) {
+			pingCore.AbortAll ();
+			Progress.ProgressValue = 100;
+			//更新开始按钮的可执行状态，变为可按
+			BeginButton.ProgressOfCommand.Progressing = false;
+			BeginButton.RaiseCanExecuteChanged ();
+			//更新终止按钮状态
+			AbortButton.RaiseCanExecuteChanged ();
 		}
 
 
@@ -119,7 +139,7 @@ namespace CsPingWPF.ViewModels {
 				ip);
 				}
 			}
-			int totalCount = ( int.Parse (config.IpTextBoxD) - int.Parse (config.IpTextBoxC) + 1 ) * 255 * int.Parse(config.PingTimesText);
+			int totalCount = ( int.Parse (config.IpTextBoxD) - int.Parse (config.IpTextBoxC) + 1 ) * 255 * int.Parse (config.PingTimesText);
 			progress.SetParameter (pingCore, totalCount);
 			//新建一个线程处理progressbar
 			new System.Threading.Thread (new System.Threading.ThreadStart (progress.UpdateProgressBarThread)).Start ();
@@ -133,6 +153,8 @@ namespace CsPingWPF.ViewModels {
 			public Action<object> ExecuteCommand = null;
 			public Func<object, bool> CanExecuteCommand = null;
 			public event EventHandler CanExecuteChanged;
+			//传入进度条对象以获取进度
+			public ProgressModel ProgressOfCommand;
 			/// <summary>
 			/// 如果定义了CanExecuteCommand，则由该方法返回是否启用，若未定义，默认返回true
 			/// </summary>
