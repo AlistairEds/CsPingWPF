@@ -43,7 +43,7 @@ namespace CsPingWPF.ViewModels {
 				//由于两个按钮借助一个Progress做判断即可，AbortButton也使用BeginButton的Progress
 				//ProgressOfCommand = Progress
 			};
-			
+
 			//读入配置文件
 			iniModel.SetFilePath (AppDomain.CurrentDomain.BaseDirectory + "config.ini");
 			ReadIniFile (iniModel, Config);
@@ -62,7 +62,7 @@ namespace CsPingWPF.ViewModels {
 			//保存配置
 			WriteIniFile (iniModel, Config);
 			//开启线程池
-			StartTheard (Config, Progress, pingCore);
+			StartThread (Config, Progress, pingCore);
 			//更新开始按钮的可执行状态，变为不可按
 			BeginButton.ProgressOfCommand.Progressing = true;
 			BeginButton.RaiseCanExecuteChanged ();
@@ -127,7 +127,7 @@ namespace CsPingWPF.ViewModels {
 		/// <param name="config"></param>
 		/// <param name="progress"></param>
 		/// <param name="pingCore"></param>
-		private void StartTheard ( ConfigModel config, ProgressModel progress, PingCore pingCore ) {
+		private void StartThread ( ConfigModel config, ProgressModel progress, PingCore pingCore ) {
 			int minThreads = int.Parse (config.MinThreadText);
 			System.Threading.ThreadPool.SetMinThreads (minThreads, minThreads);
 			//System.Threading.ThreadPool.SetMaxThreads (500, 500);
@@ -143,7 +143,18 @@ namespace CsPingWPF.ViewModels {
 			progress.SetParameter (pingCore, totalCount);
 			//新建一个线程处理progressbar
 			new System.Threading.Thread (new System.Threading.ThreadStart (progress.UpdateProgressBarThread)).Start ();
-
+			//用于获取进度条结束事件
+			System.Threading.ManualResetEvent manualEvent = new System.Threading.ManualResetEvent (false);
+			progress.SetFinishEvent (manualEvent);
+			//新建一个线程用于等待进度条结束，来更新UI按钮状态
+			new System.Threading.Thread (new System.Threading.ThreadStart (delegate {
+				manualEvent.WaitOne ();
+				//更新按钮状态
+				App.Current.Dispatcher.BeginInvoke (new Action (() => {
+					BeginButton.RaiseCanExecuteChanged ();
+					AbortButton.RaiseCanExecuteChanged ();
+				}));
+			})).Start ();
 		}
 
 		/// <summary>
@@ -180,7 +191,6 @@ namespace CsPingWPF.ViewModels {
 				}
 			}
 		}
-
 
 		private void ReadIniFile ( IniModel ini, ConfigModel config ) {
 

@@ -21,10 +21,19 @@ namespace CsPingWPF.Models {
 		}
 		//是否正在进行进度条更新，用于辅助判断按钮的CanExecute事件
 		public bool Progressing = false;
+		//用于获取progressBar的结束消息
+		private System.Threading.ManualResetEvent FinishEvent;
+		public void SetFinishEvent ( System.Threading.ManualResetEvent finishiEvent ) {
+			FinishEvent = finishiEvent;
+		}
 
 		private PingCore PingCore;
 		private int PingTotalCount;
-
+		/// <summary>
+		/// 用于设置ping总数和pingCore的参数
+		/// </summary>
+		/// <param name="pingCore"></param>
+		/// <param name="pingTotalCount"></param>
 		public void SetParameter ( PingCore pingCore, int pingTotalCount ) {
 			PingCore = pingCore;
 			PingTotalCount = pingTotalCount;
@@ -48,6 +57,9 @@ namespace CsPingWPF.Models {
 					System.Threading.Thread.Sleep (1000);
 				} while ( ProgressValue < 100 );
 				Progressing = false;
+				if ( FinishEvent != null ) {
+					FinishEvent.Set ();
+				}
 			}
 		}
 	}
