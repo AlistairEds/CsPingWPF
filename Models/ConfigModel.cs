@@ -93,7 +93,7 @@ namespace CsPingWPF.Models {
 			}
 			set {
 				if ( int.TryParse (value, out int outValue) ) {
-					if ( outValue > 0 && outValue < 50 ) {
+					if ( outValue >= 0 && outValue < 50 ) {
 						_maxFailedCountText = value;
 						NotifyPropertyChanged ("MaxFailedCountText");
 						isConfigRight = true;
