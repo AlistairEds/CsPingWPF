@@ -11,7 +11,7 @@ namespace CsPingWPF.Models {
 		//UI接口
 		private UIFunc _uIFunc;
 		//已经ping的总数
-		public int totalCount = 0;
+		public int currentPingCount = 0;
 		//终止线程标志
 		private bool isAbort = false;
 
@@ -80,7 +80,7 @@ namespace CsPingWPF.Models {
 			int averRTT = 0;
 			string IP = (string) ip;
 			bool isDele = false;
-			//int totalCount = 0;
+			//int currentPingCount = 0;
 
 			for ( int i = 1; i <= _pingTimes && !isAbort; i++ ) {
 				if ( Ping (IP, 1000, ref roundTripTime) ) {
@@ -100,20 +100,20 @@ namespace CsPingWPF.Models {
 					failedCount++;					
 					if ( failedCount > _maxFailedCount ) {
 						isDele = true;
-						//totalCount += _pingTimes - succeedCount - failedCount + 1;
-						//System.Diagnostics.Debug.WriteLine (ip + "-total:" + totalCount + " succeed:" + succeedCount + " failed:" + failedCount);
+						//currentPingCount += _pingTimes - succeedCount - failedCount + 1;
+						//System.Diagnostics.Debug.WriteLine (ip + "-total:" + currentPingCount + " succeed:" + succeedCount + " failed:" + failedCount);
 						_uIFunc.UIFunction (IP, 0, succeedCount, failedCount, maxRTT, minRTT, averRTT, isDele);
 						break;
 					}
 				}
 
-				//totalCount++;
+				//currentPingCount++;
 				//接口，由外部实现，用于处理数据和操作UI
 				_uIFunc.UIFunction (IP, (int) roundTripTime, succeedCount, failedCount, maxRTT, minRTT, averRTT, isDele);
 				System.Threading.Thread.Sleep (_interval);
 			}
-			totalCount += _pingTimes;
-			//System.Diagnostics.Debug.WriteLine (ip + "-total:"+ totalCount + " succeed:" + succeedCount + " failed:" + failedCount);
+			currentPingCount += _pingTimes;
+			//System.Diagnostics.Debug.WriteLine (ip + "-total:"+ currentPingCount + " succeed:" + succeedCount + " failed:" + failedCount);
 
 
 

@@ -47,15 +47,15 @@ namespace CsPingWPF.Models {
 				Progressing = true;
 				double tmpValue;
 				do {
-					tmpValue = PingCore.totalCount / (double) PingTotalCount * 100;
+					tmpValue = PingCore.currentPingCount / (double) PingTotalCount * 100;
 					while ( tmpValue.CompareTo (ProgressValue) == 1 ) {
 						ProgressValue++;
 						System.Threading.Thread.Sleep (50);
 					}
 
-					System.Diagnostics.Debug.WriteLine ("bar" + PingCore.totalCount + "____" + PingTotalCount);
+					System.Diagnostics.Debug.WriteLine ("bar" + PingCore.currentPingCount + "____" + PingTotalCount);
 					System.Threading.Thread.Sleep (1000);
-				} while ( ProgressValue < 100 );
+				} while ( PingCore.currentPingCount < PingTotalCount );
 				Progressing = false;
 				if ( FinishEvent != null ) {
 					FinishEvent.Set ();
