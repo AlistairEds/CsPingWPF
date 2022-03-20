@@ -55,7 +55,7 @@ namespace CsPingWPF.Models {
 
 					System.Diagnostics.Debug.WriteLine ("bar" + PingCore.currentPingCount + "____" + PingTotalCount);
 					System.Threading.Thread.Sleep (1000);
-				} while ( PingCore.currentPingCount < PingTotalCount );
+				} while ( PingCore.currentPingCount < PingTotalCount && Progressing);
 				Progressing = false;
 				if ( FinishEvent != null ) {
 					FinishEvent.Set ();
